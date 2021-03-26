@@ -171,49 +171,44 @@ void BufMgr::allocPage(File* file, PageId &pageNo, Page*& page)
 void BufMgr::flushFile(const File* file) 
 // ROUGH DRAFT
 { // can you access bufTable from file this way?
-	for (i = 0; i < numBufs ; i++)
+	for (FrameId i = 0; i < numBufs ; i++)
   {
     if(bufDescTable[i].file == file) // might need another way to access bufTable from file
     {
-      if(bufTable[i].pinCnt > 0)
+      if(bufDescTable[i].pinCnt > 0)
       {
-        throw PagePinnedExcpetion();
+        throw PagePinnedException(file->filename(), bufDescTable[i].pageNo, i);
       }
-      if (bufTable[i].valid == false)
+      if (bufDescTable[i].valid == false)
       {
-        throw BadBufferException();
+        throw BadBufferException(bufDescTable[i].frameNo, bufDescTable[i].dirty, bufDescTable[i].valid, bufDescTable[i].refbit);
       }
-      
-      if(bufTable[i].dirty == true)
+      if (bufDescTable[i].dirty == true)
       {
-        file->writePage();
-        bufTable[i].dirty = false;
+        bufDescTable[i].file->writePage(bufPool[i]);
+        bufDescTable[i].dirty = false;
       }
-      
-      hashTable[i].remove(file, );
-      bufTable[i].frameNo = BufDesc.Clear()
+      hashTable->remove(file, bufDescTable[i].frameNo);
+      bufDescTable[i].Clear();
     }
   }  
 }
 
 void BufMgr::disposePage(File* file, const PageId PageNo)
 {
-// ROUGH DRAFT
-  for (i = 0; i < bufPool.size; i++)
-  {
-    if (bufPool[i] == PageID)
-    {
-    free(bufPool[i]); // frees the page entry in bufPool
-    }
+  FrameId frameId;
+  try {
+    hashTable->lookup(file, PageNo, frameId);
+    // free frame in buffer pool
+    bufDescTable[frameId].Clear();
+    // remove from the hash table
+    hashTable->remove(file, PageNo);
   }
-  for (j = 0; j < hashTable.size; j++)
+  catch(HashNotFoundException& e)
   {
-    if (hashTable[j] == PageID)
-    {
-    free(hashTable[j]); // frees the page entry in the hashTable
-    }
+    // page doesn't exist?
   }
-  file->delete(PageNo); // delete the allocated page from using allocPage
+  file->deletePage(PageNo); // delete the allocated page from using allocPage
 }
 
 void BufMgr::printSelf(void) 
