@@ -134,15 +134,15 @@ void BufMgr::unPinPage(File* file, const PageId pageNo, const bool dirty)
     FrameId frameNo;
     //Find if the this file/page/frameNo is in the buffer
     try{
-	hashTable->lookup(file,pageNo,&frameNo);
+	hashTable->lookup(file,pageNo,frameNo);
     }
     //file/page/frameNo not found in buffer.  Do nothing.
-    catch(HashNotFoundException){
+    catch(HashNotFoundException& e){
 	return;
     }
 
     //If the page already not pinned -> throw exception
-    if(bufDescTable[frameNo].pinCount == 0){
+    if(bufDescTable[frameNo].pinCnt == 0){
 	throw PageNotPinnedException();
     }
     bufDescTable[frameNo].pinCnt = bufDescTable[frameNo].pinCnt - 1;
@@ -161,8 +161,8 @@ void BufMgr::allocPage(File* file, PageId &pageNo, Page*& page)
     Page allocPage = file->allocatePage();
     file->writePage();
     try{
-	BufMgr::allocBuf();
-    } catch(BufferExceededException){
+	// allocBuf();
+    } catch(BufferExceededException& e){
 	return;
     }
 
