@@ -86,13 +86,33 @@ void BufMgr::allocBuf(FrameId & frame)
     // throw BufferExceededException if all buffer frames are pinned
     throw BufferExceededException();
   }
+  // return value
   frame = clockHand;
 }
 
 	
 void BufMgr::readPage(File* file, const PageId pageNo, Page*& page)
 {
-  // avorontsov
+  FrameId frameNo;
+  try
+  {
+    hashTable->lookup(file, pageNo, frameNo);
+    // success
+    bufDescTable[frameNo].refbit = true;
+    bufDescTable[frameNo].pinCnt++;
+    // return value
+    page = &bufPool[frameNo];
+  }
+  catch (const HashNotFoundException&)
+  {
+    // failure, allocate new page in buffer
+    allocBuf(frameNo);
+    bufPool[frameNo] = file->readPage(pageNo);
+    hashTable->insert(file, pageNo, frameNo);
+    bufDescTable[frameNo].Set(file, pageNo);
+    // return value
+    page = &bufPool[frameNo];
+  }
 }
 
 
