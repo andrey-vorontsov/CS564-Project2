@@ -125,14 +125,46 @@ void BufMgr::readPage(File* file, const PageId pageNo, Page*& page)
   }
 }
 
-
+//Decrement the pin count.  Set the dirty bit in the bufDescTable to true.
+//Does nothing if not found in the hash table lookup
+//Throws PageNotPinnedException if page already not pinned.
 void BufMgr::unPinPage(File* file, const PageId pageNo, const bool dirty) 
 {
-  //ben
+    //Hash table maps file/pageNo to index of page in buffer?
+    FrameId frameNo = hashTable->hash(file, pageNo);
+    //Find if the this file/page/frameNo is in the buffer
+    try{
+	hashTable.lookup(file,pageNo,frameNo);
+    }
+    //file/page/frameNo not found in buffer.  Do nothing.
+    catch(HashNotFoundException){
+	return;
+    }
+
+    //If the page already not pinned -> throw exception
+    if(bufDescTable[frameNo].pinCount == 0){
+	throw PageNotPinnedException;
+    }
+    bufDescTable[frameNo].pinCount = bufDescTable[frameNo].pinCount - 1;
+    if(dirty){
+	bufDescTable[frameNo].dirty = true;
+    }
 }
 
+//Allocates a new empty page.  New page is assigned a frame in the buffer pool.
+//Output: Page object that was allocated
+//
+//DOES THIS RETURN ANYTHING?? Says it does in the assignment, but is void in the docs.
 void BufMgr::allocPage(File* file, PageId &pageNo, Page*& page) 
 {
+    //Is the input page pointer supposed to be changed to point at the newly allocated page?
+    Page allocPage = file->allocatePage();
+    file->writePage();
+    try{
+	BufMgr::allocBuf();
+    } catch(){
+	return;
+    }
 // ben
 }
 
