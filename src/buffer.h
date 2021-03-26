@@ -1,4 +1,14 @@
 /**
+ * CS564 - Project 2 Group 62 submission
+ * Andrey Vorontsov 
+ * avorontsov
+ * Benjamin Procknow
+ * bprocknow
+ * Phil Akaishi
+ * pakaishi
+ */
+
+/**
  * @author See Contributors.txt for code contributors and overview of BadgerDB.
  *
  * @section LICENSE
