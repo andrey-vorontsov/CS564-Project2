@@ -137,13 +137,54 @@ void BufMgr::allocPage(File* file, PageId &pageNo, Page*& page)
 }
 
 void BufMgr::flushFile(const File* file) 
-{
-// phil
+// ROUGH DRAFT
+{ // can you access bufTable from file this way?
+	for (i = 0; i < bufTable.size; i++)
+  {
+    if(file.contains(bufTable[i].pageNo) // might need another way to access bufTable from file
+    {
+      //try {
+      if(bufTable[i].pinCnt == 0)
+      {
+      throw PagePinnedExcpetion();
+      }
+      //catch (PagePinnedException e)
+      
+      if (bufTable[i].valid == 'FALSE'
+      {
+      throw BadBufferException();
+      }
+      
+      if(bufTable[i].dirty == 'TRUE')
+      {
+      file->writePage();
+      bufTable[i].dirty = 'FALSE';
+      }
+      
+      delete(hashTable[i]); //maybe remove?
+      bufTable[i].frameNo = BufDesc.Clear()
+    }
+  }  
 }
 
 void BufMgr::disposePage(File* file, const PageId PageNo)
 {
-// phil
+// ROUGH DRAFT
+  for (i = 0; i < bufPool.size; i++)
+  {
+    if (bufPool[i] == PageID)
+    {
+    free(bufPool[i]); // frees the page entry in bufPool
+    }
+  }
+  for (j = 0; j < hashTable.size; j++)
+  {
+    if (hashTable[j] == PageID)
+    {
+    free(hashTable[j]); // frees the page entry in the hashTable
+    }
+  }
+  file->delete(PageNo); // delete the allocated page from using allocPage
 }
 
 void BufMgr::printSelf(void) 
