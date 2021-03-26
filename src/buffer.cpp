@@ -40,7 +40,6 @@ BufMgr::BufMgr(std::uint32_t bufs)
 
 
 BufMgr::~BufMgr() {
-  // avorontsov
   for (FrameId i = 0; i < numBufs; i++)
   {
     if (bufDescTable[i].dirty == true)
@@ -59,8 +58,35 @@ void BufMgr::advanceClock()
 }
 
 void BufMgr::allocBuf(FrameId & frame) 
-{
-// avorontsov
+{ 
+  uint32_t cntLoops = 0;
+  while (cntLoops < (2 * numBufs))
+  {
+    advanceClock();
+    BufDesc &curr = bufDescTable[clockHand];
+    if (!curr.valid)
+    {
+      break;
+    }
+    if (!curr.refbit && curr.pinCnt == 0)
+    {
+      if (curr.dirty)
+      {
+        // flush dirty page to disk
+        curr.file->writePage(bufPool[clockHand]);
+      }
+      hashTable->remove(curr.file, curr.pageNo);
+      break;
+    }
+    bufDescTable[clockHand].refbit = false;
+    cntLoops++;
+  }
+  if (cntLoops >= (2 * numBufs))
+  {
+    // throw BufferExceededException if all buffer frames are pinned
+    throw BufferExceededException();
+  }
+  frame = clockHand;
 }
 
 	
