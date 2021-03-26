@@ -139,29 +139,26 @@ void BufMgr::allocPage(File* file, PageId &pageNo, Page*& page)
 void BufMgr::flushFile(const File* file) 
 // ROUGH DRAFT
 { // can you access bufTable from file this way?
-	for (i = 0; i < bufTable.size; i++)
+	for (i = 0; i < numBufs ; i++)
   {
-    if(file.contains(bufTable[i].pageNo) // might need another way to access bufTable from file
+    if(bufDescTable[i].file == file) // might need another way to access bufTable from file
     {
-      //try {
-      if(bufTable[i].pinCnt == 0)
+      if(bufTable[i].pinCnt > 0)
       {
-      throw PagePinnedExcpetion();
+        throw PagePinnedExcpetion();
       }
-      //catch (PagePinnedException e)
-      
-      if (bufTable[i].valid == 'FALSE'
+      if (bufTable[i].valid == false)
       {
-      throw BadBufferException();
+        throw BadBufferException();
       }
       
-      if(bufTable[i].dirty == 'TRUE')
+      if(bufTable[i].dirty == true)
       {
-      file->writePage();
-      bufTable[i].dirty = 'FALSE';
+        file->writePage();
+        bufTable[i].dirty = false;
       }
       
-      delete(hashTable[i]); //maybe remove?
+      hashTable[i].remove(file, );
       bufTable[i].frameNo = BufDesc.Clear()
     }
   }  
