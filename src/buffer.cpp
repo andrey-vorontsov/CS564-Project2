@@ -23,6 +23,8 @@
 #include "exceptions/page_pinned_exception.h"
 #include "exceptions/bad_buffer_exception.h"
 #include "exceptions/hash_not_found_exception.h"
+#include "exceptions/hash_already_present_exception.h"
+#include "exceptions/hash_table_exception.h"
 
 namespace badgerdb { 
 
@@ -143,7 +145,7 @@ void BufMgr::unPinPage(File* file, const PageId pageNo, const bool dirty)
 
     //If the page already not pinned -> throw exception
     if(bufDescTable[frameNo].pinCnt == 0){
-	throw PageNotPinnedException();
+	throw PageNotPinnedException(file->filename(), pageNo, frameNo);
     }
     bufDescTable[frameNo].pinCnt = bufDescTable[frameNo].pinCnt - 1;
     if(dirty){
@@ -153,18 +155,28 @@ void BufMgr::unPinPage(File* file, const PageId pageNo, const bool dirty)
 
 //Allocates a new empty page.  New page is assigned a frame in the buffer pool.
 //Output: Page object that was allocated
-//
-//DOES THIS RETURN ANYTHING?? Says it does in the assignment, but is void in the docs.
 void BufMgr::allocPage(File* file, PageId &pageNo, Page*& page) 
 {
-    //Is the input page pointer supposed to be changed to point at the newly allocated page?
+    FrameId frameNo;
+    //Allocate an empty page
     Page allocPage = file->allocatePage();
-    file->writePage();
+    pageNo = allocPage.page_number();
     try{
-	// allocBuf();
+	//Allocate a buffer using the clock algorithm
+	allocBuf(frameNo);
     } catch(BufferExceededException& e){
 	return;
     }
+    try{
+        hashTable->insert(file, pageNo, frameNo);
+    } catch(HashAlreadyPresentException& e){
+	//return?
+    } catch (HashTableException& e){
+	return;
+    }
+    bufDescTable[frameNo].Set(file, pageNo);
+    //Return pointer to buffer pool
+    page = &bufPool[frameNo]; 
 
 // ben
 }
