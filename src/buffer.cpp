@@ -145,11 +145,7 @@ void BufMgr::unPinPage(File* file, const PageId pageNo, const bool dirty)
 
     //If the page already not pinned -> throw exception
     if(bufDescTable[frameNo].pinCnt == 0){
-<<<<<<< HEAD
-	throw PageNotPinnedException(file->filename(), pageNo, frameNo);
-=======
 	throw PageNotPinnedException(file->filename(), bufDescTable[frameNo].pageNo, frameNo); // Recently Edited
->>>>>>> fe7fffd9f6802ed3d90a5f776b9410cdbfe96867
     }
     bufDescTable[frameNo].pinCnt = bufDescTable[frameNo].pinCnt - 1;
     if(dirty){
