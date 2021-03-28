@@ -166,14 +166,9 @@ void BufMgr::allocPage(File* file, PageId &pageNo, Page*& page)
     allocBuf(frameNo);
     
     pageNo = allocPage.page_number();
-    try{
-        hashTable->insert(file, pageNo, frameNo);
-    } catch(HashAlreadyPresentException& e){
-	//How should these return pointers be cleared?
-    	return;
-    } catch (HashTableException& e){
-	return;
-    }
+    
+    hashTable->insert(file, pageNo, frameNo);
+    
     bufDescTable[frameNo].Set(file, pageNo);
     //Return pointer to buffer pool
     page = &bufPool[frameNo]; 
