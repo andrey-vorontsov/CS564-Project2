@@ -138,8 +138,9 @@ void BufMgr::unPinPage(File* file, const PageId pageNo, const bool dirty)
     try{
 	hashTable->lookup(file,pageNo,frameNo);
     }
-    //file/page/frameNo not found in buffer.  Do nothing.
+    //file/page/frameNo not found in buffer.  Should this do nothing or throw the exception????
     catch(HashNotFoundException& e){
+	std::cout<<"Hash exception";
 	return;
     }
 
@@ -154,23 +155,22 @@ void BufMgr::unPinPage(File* file, const PageId pageNo, const bool dirty)
 }
 
 //Allocates a new empty page.  New page is assigned a frame in the buffer pool.
-//Output: Page object that was allocated
+//Doesn't allocate a page if the buffer table if filled.
+//Output: Page number and Page object that was allocated
 void BufMgr::allocPage(File* file, PageId &pageNo, Page*& page) 
 {
     FrameId frameNo;
     //Allocate an empty page
     Page allocPage = file->allocatePage();
+    //Allocate a new buffer.  If buffer is full throws exception up stack
+    allocBuf(frameNo);
+    
     pageNo = allocPage.page_number();
-    try{
-	//Allocate a buffer using the clock algorithm
-	allocBuf(frameNo);
-    } catch(BufferExceededException& e){
-	return;
-    }
     try{
         hashTable->insert(file, pageNo, frameNo);
     } catch(HashAlreadyPresentException& e){
-	//return?
+	//How should these return pointers be cleared?
+    	return;
     } catch (HashTableException& e){
 	return;
     }
