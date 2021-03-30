@@ -46,6 +46,7 @@ void test3();
 void test4();
 void test5();
 void test6();
+void test7();
 void testBufMgr();
 
 int main() 
@@ -158,6 +159,7 @@ void testBufMgr()
 	test4();
 	test5();
 	test6();
+	test7();
 
 	//Close files before deleting them
 	file1.~File();
@@ -330,4 +332,24 @@ void test6()
 		bufMgr->unPinPage(file1ptr, i, true);
 
 	bufMgr->flushFile(file1ptr);
+}
+void test7()
+{
+  // Dispose page should clear up a frame for alloc page -> should not throw Exception
+  for (i = 0; i < num; i++) {
+		bufMgr->allocPage(file5ptr, pid[i], page);
+		sprintf((char*)tmpbuf, "test.5 Page %u %7.1f", pid[i], (float)pid[i]);
+		rid[i] = page->insertRecord(tmpbuf);
+	}
+
+	PageId tmp;
+	try
+	{
+    bufMgr->disposePage(file5ptr, pid[i]);
+		bufMgr->allocPage(file5ptr, tmp, page);
+	}
+  catch(const BufferExceededException &e)
+	{
+	}
+ std::cout << "Test 7 passed" << "\n";
 }
