@@ -239,7 +239,6 @@ void testBen8(){
 	try{
 		bufMgr->readPage(file7ptr, testPage, page2);
 	} catch(InvalidPageException &e){
-		bufMgr->unPinPage(file7ptr, testPage, page2);
 		bufMgr->flushFile(file7ptr);
 		std::cout<<"Test 8 passed"<<"\n";
 		return;
