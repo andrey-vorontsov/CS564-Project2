@@ -166,6 +166,7 @@ void BufMgr::allocPage(File* file, PageId &pageNo, Page*& page)
     allocBuf(frameNo);
     
     pageNo = allocPage.page_number();
+    bufPool[frameNo] = allocPage; // ADDED - does this fix?
     
     hashTable->insert(file, pageNo, frameNo);
     
