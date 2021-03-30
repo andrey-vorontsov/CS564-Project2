@@ -166,7 +166,7 @@ namespace badgerdb
     //file/page/frameNo not found in buffer
     catch (HashNotFoundException & e) 
     {
-      std::cout << "Hash exception";
+      std::cout << "Hash exception"<<"\n";
       return;
     }
 

@@ -177,6 +177,8 @@ void testBufMgr()
 	test4();
 	test5();
 	test6();
+	test7();
+	test8();
 	testBen7();
 	testBen8();
 	testBen9();
@@ -191,7 +193,7 @@ void testBufMgr()
 	file6.~File();
 	file7.~File();
 	file8.~File();
-
+	
 	//Delete files
 	File::remove(filename1);
 	File::remove(filename2);
@@ -226,6 +228,7 @@ void testBen7()
     for(i=0;i<num;i++){
 	bufMgr->unPinPage(file6ptr,pid[i],false);
     }
+    bufMgr->flushFile(file6ptr);
     std::cout<<"Test 7 passed"<<"\n";
 }
 
@@ -238,9 +241,12 @@ void testBen8(){
 	try{
 		bufMgr->readPage(file7ptr, testPage, page2);
 	} catch(InvalidPageException &e){
+		bufMgr->unPinPage(file7ptr, testPage, page2);
+		bufMgr->flushFile(file7ptr);
 		std::cout<<"Test 8 passed"<<"\n";
 		return;
 	}
+	bufMgr->unPinPage(file7ptr, testPage, page2);
 	PRINT_ERROR("ERROR :: page was disposed but was still accessible to read");
 }
 
@@ -269,6 +275,7 @@ void testBen9(){
 		//Record should not have been written, so it cannot be retrieved.
 		std::cout<<"Test 9 success"<<"\n";
 		bufMgr->unPinPage(file8ptr, testPage, page);
+		bufMgr->flushFile(file8ptr);
 		return;
 	}
 	bufMgr->unPinPage(file8ptr, testPage, page);
@@ -296,9 +303,12 @@ void testBen10(){
 	sprintf((char*)&tmpbuf, "test.8 Page %u %7.1f", pid[i], (float)pid[i]);
         if(strncmp(page->getRecord(rid2).c_str(), tmpbuf, strlen(tmpbuf)) == 0)
         {
-        	std::cout<<"Test 10 passed"<<"\n";
+        	bufMgr->unPinPage(file8ptr, testPage, page);
+		bufMgr->flushFile(file8ptr);
+		std::cout<<"Test 10 passed"<<"\n";
 		return;
 	}
+	bufMgr->unPinPage(file8ptr, testPage, page);
 	PRINT_ERROR("ERROR :: The new page with record should have been written to disk");
 
 }
