@@ -208,24 +208,30 @@ namespace badgerdb
 
   void BufMgr::flushFile(const File * file)
   {
+    // Scans bufTable
     for (FrameId i = 0; i < numBufs; i++) 
     {
-      if (bufDescTable[i].file == file) // might need another way to access bufTable from file
+      if (bufDescTable[i].file == file) 
       {
+        // If the page is pinned, throw PagePinnedException
         if (bufDescTable[i].pinCnt > 0) 
         {
           throw PagePinnedException(file -> filename(), bufDescTable[i].pageNo, i);
         }
+        // If not a valid page throw BadBufferException
         if (bufDescTable[i].valid == false) 
         {
           throw BadBufferException(bufDescTable[i].frameNo, bufDescTable[i].dirty, bufDescTable[i].valid, bufDescTable[i].refbit);
         }
+        // File is dirty call file -> writePage() dirty bit is now false
         if (bufDescTable[i].dirty == true) 
         {
           bufDescTable[i].file -> writePage(bufPool[i]);
           bufDescTable[i].dirty = false;
         }
+        // Removes the page from hashtable
         hashTable -> remove(file, bufDescTable[i].pageNo);
+        // Clears Description
         bufDescTable[i].Clear();
       }
     }
@@ -243,9 +249,10 @@ namespace badgerdb
       hashTable -> remove(file, PageNo);
     } catch (HashNotFoundException & e) 
     {
-      // page doesn't exist?
+      // Dipose page does nothing if the page does not exist
     }
-    file -> deletePage(PageNo); // delete the allocated page from using allocPage
+    // delete the page from the file
+    file -> deletePage(PageNo); 
   }
 
   void BufMgr::printSelf(void) 
