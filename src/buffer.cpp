@@ -136,6 +136,7 @@ void BufMgr::readPage(File* file, const PageId pageNo, Page*& page)
 //Decrement the pin count.  Set the dirty bit in the bufDescTable to true.
 //Does nothing if not found in the hash table lookup
 //Throws PageNotPinnedException if page already not pinned.
+//Input: file and pageNo in the file.  Boolean dirty
 void BufMgr::unPinPage(File* file, const PageId pageNo, const bool dirty) 
 {
     //Hash table maps file/pageNo to index of page in buffer?
@@ -162,6 +163,7 @@ void BufMgr::unPinPage(File* file, const PageId pageNo, const bool dirty)
 
 //Allocates a new empty page.  New page is assigned a frame in the buffer pool.
 //Doesn't allocate a page if the buffer table if filled.
+//Input: File to allocate page
 //Output: Page number and Page object that was allocated
 void BufMgr::allocPage(File* file, PageId &pageNo, Page*& page) 
 {
