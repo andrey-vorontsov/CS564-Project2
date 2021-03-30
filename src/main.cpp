@@ -22,6 +22,7 @@
 #include "exceptions/page_not_pinned_exception.h"
 #include "exceptions/page_pinned_exception.h"
 #include "exceptions/buffer_exceeded_exception.h"
+#include "exceptions/invalid_record_exception.h"
 
 #define PRINT_ERROR(str) \
 { \
@@ -38,7 +39,7 @@ RecordId rid[num], rid2, rid3;
 Page *page, *page2, *page3;
 char tmpbuf[100];
 BufMgr* bufMgr;
-File *file1ptr, *file2ptr, *file3ptr, *file4ptr, *file5ptr;
+File *file1ptr, *file2ptr, *file3ptr, *file4ptr, *file5ptr, *file6ptr, *file7ptr, *file8ptr;
 
 void test1();
 void test2();
@@ -46,6 +47,10 @@ void test3();
 void test4();
 void test5();
 void test6();
+void testBen7();
+void testBen8();
+void testBen9();
+void testBen10();
 void testBufMgr();
 
 int main() 
@@ -124,6 +129,9 @@ void testBufMgr()
   const std::string& filename3 = "test.3";
   const std::string& filename4 = "test.4";
   const std::string& filename5 = "test.5";
+  const std::string& filename6 = "test.6";
+  const std::string& filename7 = "test.7";
+  const std::string& filename8 = "test.8";
 
   try
 	{
@@ -132,6 +140,9 @@ void testBufMgr()
     File::remove(filename3);
     File::remove(filename4);
     File::remove(filename5);
+    File::remove(filename6);
+    File::remove(filename7);
+    File::remove(filename8);
   }
 	catch(const FileNotFoundException &e)
 	{
@@ -142,12 +153,18 @@ void testBufMgr()
 	File file3 = File::create(filename3);
 	File file4 = File::create(filename4);
 	File file5 = File::create(filename5);
+	File file6 = File::create(filename6);
+	File file7 = File::create(filename7);
+	File file8 = File::create(filename8);
 
 	file1ptr = &file1;
 	file2ptr = &file2;
 	file3ptr = &file3;
 	file4ptr = &file4;
 	file5ptr = &file5;
+	file6ptr = &file6;
+	file7ptr = &file7;
+	file8ptr = &file8;
 
 	//Test buffer manager
 	//Comment tests which you do not wish to run now. Tests are dependent on their preceding tests. So, they have to be run in the following order. 
@@ -158,6 +175,10 @@ void testBufMgr()
 	test4();
 	test5();
 	test6();
+	testBen7();
+	testBen8();
+	testBen9();
+	testBen10();
 
 	//Close files before deleting them
 	file1.~File();
@@ -165,6 +186,9 @@ void testBufMgr()
 	file3.~File();
 	file4.~File();
 	file5.~File();
+	file6.~File();
+	file7.~File();
+	file8.~File();
 
 	//Delete files
 	File::remove(filename1);
@@ -172,10 +196,109 @@ void testBufMgr()
 	File::remove(filename3);
 	File::remove(filename4);
 	File::remove(filename5);
+	File::remove(filename6);
+	File::remove(filename7);
+	File::remove(filename8);
 
 	delete bufMgr;
 
 	std::cout << "\n" << "Passed all tests." << "\n";
+}
+
+void testBen7()
+{
+    PageId testPage;
+    bufMgr->allocPage(file6ptr, testPage, page);
+
+    bufMgr->disposePage(file6ptr, testPage);
+
+    try{
+        //Should be able to fill buffer pool with new pages
+        for(i=0;i<num;i++)
+        {
+    	    bufMgr->allocPage(file6ptr,pid[i], page);
+        }
+    } catch(BufferExceededException &e){
+	    PRINT_ERROR("ERROR :: Buffer should have been empty before allocation");
+    }
+    for(i=0;i<num;i++){
+	bufMgr->unPinPage(file6ptr,pid[i],false);
+    }
+    std::cout<<"Test 7 passed"<<"\n";
+}
+
+void testBen8(){
+	PageId testPage;
+	bufMgr->allocPage(file7ptr, testPage, page2);
+	
+	bufMgr->disposePage(file7ptr, testPage);
+
+	try{
+		bufMgr->readPage(file7ptr, testPage, page2);
+	} catch(InvalidPageException &e){
+		std::cout<<"Test 8 passed"<<"\n";
+		return;
+	}
+	PRINT_ERROR("ERROR :: page was disposed but was still accessible to read");
+}
+
+void testBen9(){
+	PageId testPage;
+	bufMgr->allocPage(file8ptr, testPage, page);
+	sprintf((char*)&tmpbuf, "test.8 Page %u %7.1f", pid[i], (float)pid[i]);	
+	rid2 = page->insertRecord(tmpbuf);
+	//Do not write page
+	bufMgr->unPinPage(file8ptr, testPage, false);
+	
+	//Fill frames with new pages
+	for(i=0;i<num;i++){
+		bufMgr->allocPage(file8ptr, pid[i], page);
+	}
+	//unpin pages
+        for(i=0;i<num;i++){
+                bufMgr->unPinPage(file8ptr, pid[i], page);
+        }	
+	//Pull page from disk and read
+	bufMgr->readPage(file8ptr, testPage, page);
+	
+	try{
+		page->getRecord(rid2);
+	} catch(InvalidRecordException &e){
+		//Record should not have been written, so it cannot be retrieved.
+		std::cout<<"Test 9 success"<<"\n";
+		bufMgr->unPinPage(file8ptr, testPage, page);
+		return;
+	}
+	bufMgr->unPinPage(file8ptr, testPage, page);
+ 	PRINT_ERROR("ERROR :: Record should not have been written to page");		
+}
+
+void testBen10(){
+	PageId testPage;
+        bufMgr->allocPage(file8ptr, testPage, page);
+        sprintf((char*)&tmpbuf, "test.8 Page %u %7.1f", pid[i], (float)pid[i]);
+        rid2 = page->insertRecord(tmpbuf);
+        //Do not write page
+        bufMgr->unPinPage(file8ptr, testPage, true);
+
+        //Fill frames with new pages
+        for(i=0;i<num;i++){
+                bufMgr->allocPage(file8ptr, pid[i], page);
+        }
+        //unpin pages
+        for(i=0;i<num;i++){
+                bufMgr->unPinPage(file8ptr, pid[i], page);
+        }       
+	//Pull page from disk and read
+        bufMgr->readPage(file8ptr, testPage, page);
+	sprintf((char*)&tmpbuf, "test.8 Page %u %7.1f", pid[i], (float)pid[i]);
+        if(strncmp(page->getRecord(rid2).c_str(), tmpbuf, strlen(tmpbuf)) == 0)
+        {
+        	std::cout<<"Test 10 passed"<<"\n";
+		return;
+	}
+	PRINT_ERROR("ERROR :: The new page with record should have been written to disk");
+
 }
 
 void test1()
@@ -209,11 +332,10 @@ void test2()
 	//The page number and the value should match
 
 	for (i = 0; i < num/3; i++) 
-	{
+	{	
 		bufMgr->allocPage(file2ptr, pageno2, page2);
 		sprintf((char*)tmpbuf, "test.2 Page %u %7.1f", pageno2, (float)pageno2);
 		rid2 = page2->insertRecord(tmpbuf);
-
 		long int index = random() % num;
     pageno1 = pid[index];
 		bufMgr->readPage(file1ptr, pageno1, page);
@@ -222,7 +344,6 @@ void test2()
 		{
 			PRINT_ERROR("ERROR :: CONTENTS DID NOT MATCH");
 		}
-
 		bufMgr->allocPage(file3ptr, pageno3, page3);
 		sprintf((char*)tmpbuf, "test.3 Page %u %7.1f", pageno3, (float)pageno3);
 		rid3 = page3->insertRecord(tmpbuf);
@@ -233,14 +354,12 @@ void test2()
 		{
 			PRINT_ERROR("ERROR :: CONTENTS DID NOT MATCH");
 		}
-
 		bufMgr->readPage(file3ptr, pageno3, page3);
 		sprintf((char*)&tmpbuf, "test.3 Page %u %7.1f", pageno3, (float)pageno3);
 		if(strncmp(page3->getRecord(rid3).c_str(), tmpbuf, strlen(tmpbuf)) != 0)
 		{
 			PRINT_ERROR("ERROR :: CONTENTS DID NOT MATCH");
-		}
-
+		}	
 		bufMgr->unPinPage(file1ptr, pageno1, false);
 	}
 
