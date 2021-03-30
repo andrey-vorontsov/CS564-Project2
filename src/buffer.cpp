@@ -93,7 +93,6 @@ void BufMgr::allocBuf(FrameId & frame)
       }
       catch (HashNotFoundException& e)
       {
-        std::cout << "Warning: allocBuf allocated a frame which hadn't had a proper ht entry.\n";
       }
       break;
     }
