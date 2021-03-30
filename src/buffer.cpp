@@ -87,7 +87,14 @@ void BufMgr::allocBuf(FrameId & frame)
         // flush dirty page to disk
         curr.file->writePage(bufPool[clockHand]);
       }
-      hashTable->remove(curr.file, curr.pageNo);
+      try
+      {
+        hashTable->remove(curr.file, curr.pageNo);
+      }
+      catch (HashNotFoundException& e)
+      {
+        std::cout << "Warning: allocBuf allocated a frame which hadn't had a proper ht entry.\n";
+      }
       break;
     }
     bufDescTable[clockHand].refbit = false;
@@ -115,7 +122,7 @@ void BufMgr::readPage(File* file, const PageId pageNo, Page*& page)
     // return value
     page = &bufPool[frameNo];
   }
-  catch (const HashNotFoundException&)
+  catch (const HashNotFoundException& e)
   {
     // failure, allocate new page in buffer
     allocBuf(frameNo);
@@ -197,7 +204,7 @@ void BufMgr::flushFile(const File* file)
         bufDescTable[i].file->writePage(bufPool[i]);
         bufDescTable[i].dirty = false;
       }
-      hashTable->remove(file, bufDescTable[i].frameNo);
+      hashTable->remove(file, bufDescTable[i].pageNo);
       bufDescTable[i].Clear();
     }
   }  
