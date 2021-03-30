@@ -47,6 +47,7 @@ void test4();
 void test5();
 void test6();
 void test7();
+void test8();
 void testBufMgr();
 
 int main() 
@@ -160,6 +161,7 @@ void testBufMgr()
 	test5();
 	test6();
 	test7();
+	test8();
 
 	//Close files before deleting them
 	file1.~File();
@@ -352,4 +354,18 @@ void test7()
 	{
 	}
  std::cout << "Test 7 passed" << "\n";
+}
+void test8()
+{
+// Just like Test 5, If bugMgr has no free frames readPage should also throw an exception
+// Since it allocates a frame for any page not already in the buffer ppol
+try
+	{
+		bufMgr->readPage(file5ptr, pid[i+1], page);
+		PRINT_ERROR("ERROR :: No more frames left for allocation. Exception should have been thrown before execution reaches this point.");
+	}
+	catch(const BufferExceededException &e)
+	{
+	}
+  std::cout << "Test 8 passed.";
 }
