@@ -47,12 +47,11 @@ void test3();
 void test4();
 void test5();
 void test6();
-void test7();
-void test8();
 void testBen7();
 void testBen8();
 void testBen9();
 void testBen10();
+void test11();
 void testBufMgr();
 
 int main() 
@@ -177,12 +176,11 @@ void testBufMgr()
 	test4();
 	test5();
 	test6();
-	test7();
-	test8();
 	testBen7();
 	testBen8();
 	testBen9();
 	testBen10();
+	test11();
 
 	//Close files before deleting them
 	file1.~File();
@@ -462,37 +460,22 @@ void test6()
 
 	bufMgr->flushFile(file1ptr);
 }
-void test7()
-{
-  // Dispose page should clear up a frame for alloc page -> should not throw Exception
-  for (i = 0; i < num; i++) {
-		bufMgr->allocPage(file5ptr, pid[i], page);
-		sprintf((char*)tmpbuf, "test.5 Page %u %7.1f", pid[i], (float)pid[i]);
-		rid[i] = page->insertRecord(tmpbuf);
-	}
-
-	PageId tmp;
-	try
-	{
-    bufMgr->disposePage(file5ptr, pid[i]);
-		bufMgr->allocPage(file5ptr, tmp, page);
-	}
-  catch(const BufferExceededException &e)
-	{
-	}
- std::cout << "Test 7 passed" << "\n";
-}
-void test8()
+void test11()
 {
 // Just like Test 5, If bugMgr has no free frames readPage should also throw an exception
 // Since it allocates a frame for any page not already in the buffer ppol
 try
 	{
+ for (i = 0; i < num; i++) {
+		bufMgr->allocPage(file5ptr, pid[i], page);
+		sprintf((char*)tmpbuf, "test.5 Page %u %7.1f", pid[i], (float)pid[i]);
+		rid[i] = page->insertRecord(tmpbuf);
+	}
 		bufMgr->readPage(file5ptr, pid[i+1], page);
 		PRINT_ERROR("ERROR :: No more frames left for allocation. Exception should have been thrown before execution reaches this point.");
 	}
 	catch(const BufferExceededException &e)
 	{
 	}
-  std::cout << "Test 8 passed.";
+  std::cout << "Test 11 passed.";
 }
